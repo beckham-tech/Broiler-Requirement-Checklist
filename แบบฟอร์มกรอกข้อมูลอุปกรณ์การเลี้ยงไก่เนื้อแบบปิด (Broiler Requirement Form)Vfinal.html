@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broiler House Equipment - Requirement Form</title>
+    
+    <!-- CSS Framework: Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts: Google Fonts (Prompt for Thai) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons: FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PDF Generation: html2canvas & jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+        }
+        /* Custom scrollbar for form area */
+        .form-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .form-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        .form-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .form-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        /* Print hidden layout */
+        #print-view {
+            display: none;
+        }
+        .pdf-page {
+            background: white;
+            padding: 40px;
+            width: 210mm; /* A4 width */
+            min-height: 297mm; /* Minimum A4 height */
+            color: black;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Toast notification style */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 30px;
+            font-size: 14px;
+        }
+        #toast.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+        @-webkit-keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @-webkit-keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    </style>
+</head>
+<body class="text-slate-800 h-screen overflow-hidden flex flex-col bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-sky-400 via-blue-500 to-purple-500 text-white p-4 shadow-lg z-10 flex justify-between items-center shrink-0 border-b-4 border-yellow-400">
+        <div class="flex items-center gap-3">
+            <img src="โลโก้_KSP.png" 
+                 onerror="this.onerror=null; this.src='https://placehold.co/200x100?text=KSP+LOGO';" 
+                 alt="KSP Logo" 
+                 class="h-12 w-auto object-contain bg-white rounded-lg p-1 shadow-md">
+            <div class="hidden sm:block">
+                <h1 class="text-xl font-extrabold tracking-wide drop-shadow-md">Broiler Requirement Form</h1>
+                <p class="text-xs text-blue-100 font-medium">แบบฟอร์มเก็บข้อมูลอุปกรณ์โรงเรือนไก่เนื้อแบบปิด (สำหรับฝ่ายขาย)</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <!-- New Save Button -->
+            <button id="btnSaveSheet" onclick="saveToSheet()" class="bg-green-500 hover:bg-green-400 text-white px-4 py-2 rounded-md text-sm font-bold transition-transform transform hover:scale-105 flex items-center gap-2 shadow-lg border border-green-200">
+                <i class="fas fa-cloud-upload-alt"></i> <span class="hidden md:inline">บันทึกข้อมูล</span>
+            </button>
+            <button onclick="generatePDF()" class="bg-yellow-400 hover:bg-yellow-300 text-blue-900 px-4 py-2 rounded-md text-sm font-bold transition-transform transform hover:scale-105 flex items-center gap-2 shadow-lg border border-yellow-200">
+                <i class="fas fa-file-pdf text-red-500"></i> <span class="hidden md:inline">สร้างไฟล์ PDF</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto form-scroll">
+        
+        <!-- Center Column: Data Input Form -->
+        <section class="w-full max-w-4xl mx-auto p-4 md:p-6 pb-20">
+            <form id="requirementForm" class="space-y-6">
+                
+                <div class="bg-white/80 backdrop-blur-sm p-5 rounded-xl shadow-sm text-center border border-pink-100 space-y-4">
+                    <p class="text-[21px] font-medium text-purple-700 leading-relaxed"><i class="fas fa-sparkles text-yellow-500 mr-2"></i> กรุณากรอกข้อมูลให้ครบถ้วนเพื่อความแม่นยำในการจัดทำรายการอุปกรณ์ติดตั้ง</p>
+                    <div class="flex flex-col sm:flex-row justify-center items-center gap-3 mt-2 bg-white/60 p-3 rounded-lg inline-block border border-purple-100">
+                        <label for="salesName" class="text-sm font-semibold text-gray-700">ระบุชื่อฝ่ายขายที่ขอรายการอุปกรณ์ (ชื่อ-นามสกุล):</label>
+                        <input type="text" id="salesName" class="w-full sm:w-80 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 outline-none transition bg-white focus:bg-white text-center shadow-inner" placeholder="เช่น นายสมใจ รักฟาร์ม...">
+                    </div>
+                </div>
+
+                <!-- 0. ข้อมูลลูกค้า -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-pink-400 hover:shadow-lg transition-shadow">
+                    <h2 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2"><i class="fas fa-user-tie mr-2 text-pink-500"></i>ข้อมูลลูกค้าและโครงการ</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">ชื่อลูกค้า / บริษัท</label>
+                            <input type="text" id="custName" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-400 outline-none transition bg-gray-50 focus:bg-white" placeholder="ระบุชื่อลูกค้า...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">ชื่อฟาร์ม</label>
+                            <input type="text" id="farmName" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-400 outline-none transition bg-gray-50 focus:bg-white" placeholder="ระบุชื่อฟาร์ม...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">สถานที่ตั้ง (จังหวัด/อำเภอ)</label>
+                            <input type="text" id="location" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-400 outline-none transition bg-gray-50 focus:bg-white" placeholder="ระบุสถานที่ตั้ง...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">วันที่ประเมิน</label>
+                            <input type="date" id="evalDate" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-400 outline-none transition bg-gray-50 focus:bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">ลักษณะโครงการ</label>
+                            <select id="projType" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-400 outline-none bg-gray-50 focus:bg-white">
+                                <option value="สร้างใหม่ (New Build)">สร้างใหม่ (New Build)</option>
+                                <option value="รีโนเวท/ปรับปรุง (Renovation)">รีโนเวท/ปรับปรุง (Renovation)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">ระบบไฟฟ้าหน้างาน</label>
+                            <select id="elecSystem" onchange="toggleElecSystem()" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-400 outline-none bg-gray-50 focus:bg-white">
+                                <option value="1 เฟส (220V)">1 เฟส (220V)</option>
+                                <option value="3 เฟส (380V)">3 เฟส (380V)</option>
+                                <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                            </select>
+                            <input type="text" id="elecSystemOther" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-400 outline-none bg-gray-50 focus:bg-white mt-2 hidden" placeholder="ระบุระบบไฟฟ้า...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ข้อมูลโรงเรือน -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-blue-400 hover:shadow-lg transition-shadow">
+                    <h2 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2"><i class="fas fa-warehouse mr-2 text-blue-500"></i>ขนาดโรงเรือนและเป้าหมายการเลี้ยง</h2>
+                    
+                    <!-- Row 1: ขนาด -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">กว้าง (เมตร)</label>
+                            <input type="number" id="hWidth" oninput="calculateLiveStats('density')" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-gray-50 focus:bg-white" value="14">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">ยาว (เมตร)</label>
+                            <input type="number" id="hLength" oninput="calculateLiveStats('density')" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-gray-50 focus:bg-white" value="120">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">สูงเสาข้าง (เมตร)</label>
+                            <input type="number" id="hSideHeight" oninput="calculateLiveStats('density')" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-gray-50 focus:bg-white" value="2.5">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">ระยะห่างเสา (เมตร)</label>
+                            <select id="columnSpacing" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-gray-50 focus:bg-white">
+                                <option value="3">3 เมตร</option>
+                                <option value="4" selected>4 เมตร</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Row 2: การเลี้ยง -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">จำนวนโรงเรือน (หลัง)</label>
+                            <input type="number" id="totalHouses" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-gray-50 focus:bg-white" value="1" min="1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">น.น.เป้าหมาย (กก./ตัว)</label>
+                            <select id="targetWeight" onchange="calculateLiveStats('density')" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-gray-50 focus:bg-white">
+                                <option value="2.0">ไก่เล็ก (1.8 - 2.2 กก.)</option>
+                                <option value="2.5" selected>ไก่กลาง (2.4 - 2.8 กก.)</option>
+                                <option value="3.2">ไก่ใหญ่ (3.0 กก. ขึ้นไป)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">ความหนาแน่น (ตัว/ตร.ม.)</label>
+                            <input type="number" id="density" oninput="calculateLiveStats('density')" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-gray-50 focus:bg-white" value="12">
+                            <p class="text-[10px] text-blue-500 mt-1">*มาตรฐาน 10-20 ตัว/ตร.ม.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">จำนวนไก่ต่อหลัง (ตัว)</label>
+                            <input type="number" id="birdPerHouse" oninput="calculateLiveStats('bird')" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-gray-50 focus:bg-white" value="20160">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. ให้อาหาร -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-orange-400 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-lg font-bold text-slate-700"><i class="fas fa-drumstick-bite mr-2 text-orange-500"></i>1. ระบบให้อาหารไก่เนื้อ (Feeding System)</h2>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chkSysFeed" class="sr-only peer" checked onchange="toggleSection('fsFeed', this)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-orange-600">เปิดใช้งาน</span>
+                        </label>
+                    </div>
+                    <fieldset id="fsFeed" class="transition-opacity duration-300">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">รูปแบบอุปกรณ์</label>
+                                <select id="sysFeedType" onchange="toggleFeedType()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-orange-400 focus:bg-white">
+                                    <option value="แบบจาน (Pan Feeder)">แบบจาน (Pan Feeder)</option>
+                                    <option value="แบบโซ่ (Chain Feeder)">แบบโซ่ (Chain Feeder)</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ความจุถังพักอาหาร (Hopper)</label>
+                                <select id="sysFeedHopper" onchange="toggleFeedHopper()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-orange-400 focus:bg-white">
+                                    <option value="80 kg">80 kg</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysFeedHopperOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-orange-400 focus:bg-white mt-2 hidden" placeholder="ระบุความจุ...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">จำนวนไลน์</label>
+                                <input type="number" id="sysFeedLines" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-orange-400 focus:bg-white" value="3">
+                            </div>
+                            <div>
+                                <label id="lblFeedDensity" class="block text-sm font-semibold text-gray-700 mb-1">ความหนาแน่น (ตัว/จาน)</label>
+                                <input type="number" id="sysFeedDensity" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-orange-400 focus:bg-white" value="45">
+                                <p id="lblFeedDensityHint" class="text-[10px] text-orange-500 mt-1">*มาตรฐาน 35-45 ตัว/จาน</p>
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ระยะติดตั้งจริง (เมตร)</label>
+                                <input type="number" id="sysFeedActualLength" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-orange-400 focus:bg-white" value="110">
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ระบบรอก (Winch)</label>
+                                <select id="sysFeedWinch" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-orange-400 focus:bg-white">
+                                    <option value="รอกมือหมุน (Manual)">รอกมือหมุน (Manual)</option>
+                                    <option value="มอเตอร์กว้านอัตโนมัติ (Auto)">มอเตอร์กว้านอัตโนมัติ (Auto)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 2. ให้น้ำ -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-cyan-400 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-lg font-bold text-slate-700"><i class="fas fa-tint mr-2 text-cyan-500"></i>2. ระบบให้น้ำไก่เนื้อ (Drinking System)</h2>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chkSysDrink" class="sr-only peer" checked onchange="toggleSection('fsDrink', this)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-cyan-600">เปิดใช้งาน</span>
+                        </label>
+                    </div>
+                    <fieldset id="fsDrink" class="transition-opacity duration-300">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">รูปแบบนิปเปิ้ล</label>
+                                <select id="sysDrinkType" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-cyan-400 focus:bg-white">
+                                    <option value="นิปเปิ้ลพร้อมถ้วยรอง (With Drip Cup)">นิปเปิ้ลพร้อมถ้วยรอง</option>
+                                    <option value="นิปเปิ้ลไม่มีถ้วยรอง (Without Drip Cup)">นิปเปิ้ลไม่มีถ้วยรอง</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">แบรนด์/ระบบน้ำ</label>
+                                <select id="sysDrinkBrand" onchange="toggleDrinkBrand()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-cyan-400 focus:bg-white">
+                                    <option value="Lubing">Lubing</option>
+                                    <option value="Plasson">Plasson</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysDrinkBrandOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-cyan-400 focus:bg-white mt-2 hidden" placeholder="ระบุแบรนด์ที่ต้องการ...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">จำนวนไลน์</label>
+                                <input type="number" id="sysDrinkLines" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-cyan-400 focus:bg-white" value="4">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ระยะติดตั้งจริง (เมตร)</label>
+                                <input type="number" id="sysDrinkActualLength" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-cyan-400 focus:bg-white" value="110">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ความหนาแน่น (ตัว/หัว)</label>
+                                <input type="number" id="sysDrinkDensity" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-cyan-400 focus:bg-white" value="12">
+                                <p class="text-[10px] text-cyan-600 mt-1">*มาตรฐาน 10-12 ตัว/หัว</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ตำแหน่งเมนน้ำเข้า</label>
+                                <select id="sysDrinkMainPos" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-cyan-400 focus:bg-white">
+                                    <option value="หน้าเล้า">หน้าเล้า</option>
+                                    <option value="กลางเล้า">กลางเล้า</option>
+                                    <option value="ท้ายเล้า">ท้ายเล้า</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ประเภทชุดเมนน้ำ</label>
+                                <select id="sysDrinkMainType" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-cyan-400 focus:bg-white">
+                                    <option value="เมนน้ำปกติ (Manual)">เมนน้ำปกติ (Manual)</option>
+                                    <option value="เมนน้ำอัตโนมัติ (Auto)">เมนน้ำอัตโนมัติ (Auto)</option>
+                                    <option value="ไม่รับ">ไม่รับ</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ระบบรอก (Winch)</label>
+                                <select id="sysDrinkWinch" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-cyan-400 focus:bg-white">
+                                    <option value="รอกมือหมุน (Manual)">รอกมือหมุน (Manual)</option>
+                                    <option value="มอเตอร์อัตโนมัติ (Auto)">มอเตอร์อัตโนมัติ (Auto)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 3. ไซโลและลำเลียง -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-purple-400 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-lg font-bold text-slate-700"><i class="fas fa-database mr-2 text-purple-500"></i>3. ระบบลำเลียงอาหาร + ถังไซโล (Silo & Main Feed)</h2>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chkSysSilo" class="sr-only peer" checked onchange="toggleSection('fsSilo', this)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-purple-600">เปิดใช้งาน</span>
+                        </label>
+                    </div>
+                    <fieldset id="fsSilo" class="transition-opacity duration-300">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ขนาดไซโล</label>
+                                <select id="sysSiloSize" onchange="toggleSiloSize()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-purple-400 focus:bg-white">
+                                    <option value="7.5 ตัน">7.5 ตัน</option>
+                                    <option value="14 ตัน">14 ตัน</option>
+                                    <option value="18 ตัน">18 ตัน</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysSiloSizeOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-purple-400 focus:bg-white mt-2 hidden" placeholder="ระบุขนาดไซโล...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">จำนวนถังไซโล</label>
+                                <input type="number" id="sysSiloQty" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-purple-400 focus:bg-white" value="1">
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ชนิดถังไซโล</label>
+                                <select id="sysSiloType" onchange="toggleSiloType()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-purple-400 focus:bg-white">
+                                    <option value="ไฟเบอร์กลาส (Fiberglass)">ไฟเบอร์กลาส (Fiberglass)</option>
+                                    <option value="สังกะสี (Galvanized)">สังกะสี (Galvanized)</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysSiloTypeOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-purple-400 focus:bg-white mt-2 hidden" placeholder="ระบุชนิดถังไซโล...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">วันเก็บอาหาร (วัน)</label>
+                                <input type="number" id="sysSiloDays" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-purple-400 focus:bg-white" value="3" placeholder="จำนวนวัน">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ตำแหน่งของถังไซโล</label>
+                                <select id="sysSiloPos" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-purple-400 focus:bg-white">
+                                    <option value="หน้าเล้า">หน้าเล้า</option>
+                                    <option value="กลางเล้า">กลางเล้า</option>
+                                    <option value="ท้ายเล้า">ท้ายเล้า</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ระบบเครื่องชั่งไซโล</label>
+                                <select id="sysSiloLoadcell" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-purple-400 focus:bg-white">
+                                    <option value="ไม่รับ (No Loadcell)">ไม่รับ</option>
+                                    <option value="รับ (With Loadcell)">รับ (ต้องการ)</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 md:col-span-4">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ระยะท่อเมนลำเลียงเข้าโรงเรือน (เมตร) โดยประมาณ</label>
+                                <input type="number" id="sysMainLine" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-purple-400 focus:bg-white" value="10">
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 4. พัดลม -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-teal-400 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-lg font-bold text-slate-700"><i class="fas fa-fan mr-2 text-teal-500"></i>4. ระบบระบายอากาศพัดลม (Tunnel Fan)</h2>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chkSysFan" class="sr-only peer" checked onchange="toggleSection('fsFan', this)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-teal-600">เปิดใช้งาน</span>
+                        </label>
+                    </div>
+                    <fieldset id="fsFan" class="transition-opacity duration-300">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ความเร็วลมที่ต้องการ (ft/min)</label>
+                                <input type="number" id="sysTargetVelocity" oninput="calculateLiveStats()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-teal-400 focus:bg-white" value="600">
+                                <p class="text-[10px] text-teal-600 mt-1">*มาตรฐาน 600 - 800 ft/min</p>
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ขนาดพัดลม</label>
+                                <select id="sysFanSize" onchange="toggleFanSize()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-teal-400 focus:bg-white">
+                                    <option value="50 นิ้ว">50 นิ้ว</option>
+                                    <option value="56 นิ้ว">56 นิ้ว</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysFanSizeOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-teal-400 focus:bg-white mt-2 hidden" placeholder="ระบุขนาดพัดลม...">
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ระบบขับเคลื่อน (Motor)</label>
+                                <select id="sysFanDrive" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-teal-400 focus:bg-white">
+                                    <option value="ขับตรง (Direct Drive)">ขับตรง (Direct Drive)</option>
+                                    <option value="สายพาน (Belt Drive)">สายพาน (Belt Drive)</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ชนิดพัดลม</label>
+                                <select id="sysFanType" onchange="toggleMixedFan()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-teal-400 focus:bg-white">
+                                    <option value="AC motor">AC motor</option>
+                                    <option value="EC motor with Mechanic Damper">EC motor with Mechanic Damper</option>
+                                    <option value="EC motor with Electric Damper">EC motor with Electric Damper</option>
+                                    <option value="Mixed AC&EC motor">Mixed AC&EC motor</option>
+                                </select>
+                            </div>
+
+                            <div id="mixedFanContainer" class="col-span-2 md:col-span-4 hidden bg-teal-50 p-4 rounded-xl border border-teal-100 mt-2 space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-teal-700 mb-1">จำนวน AC motor (ตัว)</label>
+                                        <input type="number" id="qtyAC" class="w-full p-2 border border-teal-200 rounded-lg focus:ring-2 focus:ring-teal-400" placeholder="ระบุจำนวน AC...">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-teal-700 mb-1">จำนวน EC motor (ตัว)</label>
+                                        <input type="number" id="qtyEC" class="w-full p-2 border border-teal-200 rounded-lg focus:ring-2 focus:ring-teal-400" placeholder="ระบุจำนวน EC...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 5. คูลลิ่งแพด -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-blue-300 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-lg font-bold text-slate-700"><i class="fas fa-snowflake mr-2 text-blue-400"></i>5. ระบบทำความเย็น (Evaporative Cooling Pad)</h2>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chkSysPad" class="sr-only peer" checked onchange="toggleSection('fsPad', this)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-blue-600">เปิดใช้งาน</span>
+                        </label>
+                    </div>
+                    <fieldset id="fsPad" class="transition-opacity duration-300">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ความสูงเยื่อกระดาษ (เมตร)</label>
+                                <select id="sysPadHeight" onchange="togglePadHeight()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:bg-white">
+                                    <option value="1.5 เมตร">1.5 เมตร</option>
+                                    <option value="1.8 เมตร">1.8 เมตร</option>
+                                    <option value="2.0 เมตร">2.0 เมตร</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysPadHeightOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:bg-white mt-2 hidden" placeholder="ระบุความสูงเยื่อกระดาษ...">
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ความเร็วหน้าเยื่อกระดาษ (ft/min)</label>
+                                <input type="number" id="sysPadVelocity" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:bg-white" value="300">
+                                <p class="text-[10px] text-blue-500 mt-1">*มาตรฐาน 300 ft/min</p>
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ลักษณะเยื่อกระดาษ</label>
+                                <select id="sysPadStyle" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:bg-white">
+                                    <option value="ก้อนเดียว 30 cm">ก้อนเดียว 30 cm</option>
+                                    <option value="ก้อนคู่ 60 cm">ก้อนคู่ 60 cm</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ประเภทของเยื่อกระดาษ</label>
+                                <select id="sysPadType" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:bg-white">
+                                    <option value="45/45">45/45</option>
+                                    <option value="45/15">45/15</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">วัสดุราง (Frame)</label>
+                                <select id="sysPadFrame" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:bg-white">
+                                    <option value="อลูมิเนียม (Aluminum)">อลูมิเนียม (Aluminum)</option>
+                                    <option value="พีวีซี (PVC)">พีวีซี (PVC)</option>
+                                    <option value="สแตนเลส (Stainless)">สแตนเลส (Stainless)</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">การติดตั้ง</label>
+                                <select id="sysPadInstall" onchange="togglePadInstall()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:bg-white">
+                                    <option value="ติดผนังแนบโรงเรือน (Flush mount)">ติดผนังแนบโรงเรือน (Flush mount)</option>
+                                    <option value="ทำห้องยื่นออกไป (Dog house / Pad room)">ทำห้องยื่นออกไป (Dog house / Pad room)</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysPadInstallOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:bg-white mt-2 hidden" placeholder="ระบุการติดตั้ง...">
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 6. กกไก่ -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-red-400 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-lg font-bold text-slate-700"><i class="fas fa-fire mr-2 text-red-500"></i>6. ระบบกกไก่ (Brooding System)</h2>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chkSysBrooder" class="sr-only peer" checked onchange="toggleSection('fsBrooder', this)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-red-600">เปิดใช้งาน</span>
+                        </label>
+                    </div>
+                    <fieldset id="fsBrooder" class="transition-opacity duration-300">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">รูปแบบเครื่องกก</label>
+                                <select id="sysBrooderType" onchange="toggleBrooderType()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-red-400 focus:bg-white">
+                                    <option value="ตู้ฮีตเตอร์ลมร้อน (LB White)">ตู้ฮีตเตอร์ลมร้อน (LB White)</option>
+                                    <option value="ฝาชีอินฟราเรด (Infrared Canopy)">ฝาชีอินฟราเรด (Infrared Canopy)</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysBrooderTypeOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-red-400 focus:bg-white mt-2 hidden" placeholder="ระบุรูปแบบเครื่องกก...">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">รูปแบบการกก</label>
+                                <select id="sysBrooderStyle" onchange="toggleBrooderStyle()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-red-400 focus:bg-white">
+                                    <option value="กกเฉพาะจุด (Spot Brooding)">กกเฉพาะจุด (Spot Brooding)</option>
+                                    <option value="กกอุ่นทั้งห้อง (Whole House)">กกอุ่นทั้งห้อง (Whole House)</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysBrooderStyleOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-red-400 focus:bg-white mt-2 hidden" placeholder="ระบุรูปแบบการกก...">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">พื้นที่กกลูกไก่แรกรับ</label>
+                                <select id="sysBrooderArea" onchange="toggleBrooderArea()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-red-400 focus:bg-white">
+                                    <option value="ทั้งโรงเรือน">ทั้งโรงเรือน</option>
+                                    <option value="1/2 โรงเรือน">1/2 โรงเรือน</option>
+                                    <option value="1/3 โรงเรือน">1/3 โรงเรือน</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysBrooderAreaOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-red-400 focus:bg-white mt-2 hidden" placeholder="ระบุพื้นที่กก...">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ชนิดเชื้อเพลิง</label>
+                                <select id="sysBrooderFuel" onchange="toggleBrooderFuel()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-red-400 focus:bg-white">
+                                    <option value="LPG">LPG</option>
+                                    <option value="Diesel">Diesel</option>
+                                    <option value="Biogas">Biogas</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysBrooderFuelOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-red-400 focus:bg-white mt-2 hidden" placeholder="ระบุชนิดเชื้อเพลิง...">
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 7. ช่องลมเข้า -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-indigo-400 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-lg font-bold text-slate-700"><i class="fas fa-door-open mr-2 text-indigo-500"></i>7. ระบบช่องลมเข้า (Inlet / Air Step / Tunnel Door)</h2>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chkSysInlet" class="sr-only peer" checked onchange="toggleSection('fsInlet', this)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-indigo-600">เปิดใช้งาน</span>
+                        </label>
+                    </div>
+                    <fieldset id="fsInlet" class="transition-opacity duration-300">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">รูปแบบช่องลม</label>
+                                <select id="sysInletType" onchange="toggleInletType()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-indigo-400 focus:bg-white">
+                                    <option value="Tunnel Door (บานสวิงพับ)">Tunnel Door (บานสวิงพับ)</option>
+                                    <option value="Air step">Air step</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysInletTypeOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-indigo-400 focus:bg-white mt-2 hidden" placeholder="ระบุรูปแบบช่องลม...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ตำแหน่งติดตั้ง</label>
+                                <select id="sysInletPosition" onchange="toggleInletPosition()" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-indigo-400 focus:bg-white">
+                                    <option value="ผนังด้านข้าง (Side wall)">ผนังด้านข้าง (Side wall)</option>
+                                    <option value="ฝ้าเพดาน (Ceiling inlet)">ฝ้าเพดาน (Ceiling inlet)</option>
+                                    <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                                </select>
+                                <input type="text" id="sysInletPositionOther" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-indigo-400 focus:bg-white mt-2 hidden" placeholder="ระบุตำแหน่งติดตั้ง...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ระบบควบคุมการเปิด-ปิด</label>
+                                <select id="sysInletControl" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-indigo-400 focus:bg-white">
+                                    <option value="มอเตอร์กว้านอัตโนมัติตามอุณหภูมิ (Auto Winch)">มอเตอร์กว้านอัตโนมัติตามอุณหภูมิ (Auto)</option>
+                                    <option value="รอกมือหมุน (Manual)">รอกมือหมุน (Manual)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 8. ห้องควบคุม -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-yellow-500 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-lg font-bold text-slate-700"><i class="fas fa-desktop mr-2 text-yellow-500"></i>8. ห้องควบคุม (Control room)</h2>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chkSysControl" class="sr-only peer" checked onchange="toggleSection('fsControl', this)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-yellow-600">เปิดใช้งาน</span>
+                        </label>
+                    </div>
+                    <fieldset id="fsControl" class="transition-opacity duration-300">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">กว้าง (เมตร)</label>
+                                <input type="number" id="sysControlWidth" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-yellow-500 focus:bg-white" placeholder="เช่น 3">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ยาว (เมตร)</label>
+                                <input type="number" id="sysControlLength" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-yellow-500 focus:bg-white" placeholder="เช่น 4">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">ตำแหน่งห้องควบคุม</label>
+                                <select id="sysControlPos" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-yellow-500 focus:bg-white">
+                                    <option value="หน้าเล้า">หน้าเล้า</option>
+                                    <option value="กลางเล้า">กลางเล้า</option>
+                                    <option value="ท้ายเล้า">ท้ายเล้า</option>
+                                </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 9. ข้อกำหนดเพิ่มเติม -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-t-gray-500 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-lg font-bold text-slate-700"><i class="fas fa-clipboard-list mr-2 text-gray-500"></i>9. ข้อกำหนดเพิ่มเติม (Additional Requirements)</h2>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chkSysMisc" class="sr-only peer" checked onchange="toggleSection('fsMisc', this)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-500"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-gray-600">เปิดใช้งาน</span>
+                        </label>
+                    </div>
+                    <fieldset id="fsMisc" class="transition-opacity duration-300">
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">รายละเอียดเพิ่มเติม นอกเหนือจากหัวข้อด้านบนทั้งหมด</label>
+                                <textarea id="sysMiscDetails" rows="5" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:bg-white" placeholder="ระบุรายละเอียดเพิ่มเติม..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">อุปสรรคหน้างาน (Site conditions) สำหรับงานติดตั้ง</label>
+                                <textarea id="sysMiscSite" rows="5" class="w-full p-2 border border-gray-200 rounded-lg outline-none bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:bg-white" placeholder="เช่น ทางเข้าแคบ, ไม่มีที่พักคนงาน ฯลฯ"></textarea>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Hidden Toast Notification -->
+    <div id="toast">ข้อความแจ้งเตือน</div>
+
+    <!-- Hidden Elements for PDF Calculations -->
+    <div class="hidden">
+        <span id="lblArea">0</span>
+        <span id="lblCapacity">0</span>
+        <span id="lblCrossSection">0</span>
+        <span id="lblReqCFM">0</span>
+        <span id="lblEstFans">0</span>
+    </div>
+
+    <!-- Hidden Print View for PDF Generation -->
+    <div style="position: absolute; left: -9999px; top: -9999px; width: 210mm;">
+        <div id="print-view"></div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // URL ของ Google Apps Script:
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVGZNhcHZbD_YNsURLkrgFcNEN1tdmrWvTfWHCWnPtOr3Y16bsLjX8qSwdflMD90vN/exec";
+
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            toast.innerText = msg;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        async function saveToSheet() {
+            if (!SCRIPT_URL) {
+                showToast("กรุณาตั้งค่า SCRIPT_URL ในโค้ดก่อนใช้งาน");
+                return;
+            }
+
+            const btn = document.getElementById('btnSaveSheet');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
+            btn.disabled = true;
+
+            // รวบรวมข้อมูลทั้งหมดตามโครงสร้าง Apps Script ใหม่
+            const formData = {
+                salesName: document.getElementById('salesName').value,
+                custName: document.getElementById('custName').value,
+                farmName: document.getElementById('farmName').value,
+                location: document.getElementById('location').value,
+                evalDate: document.getElementById('evalDate').value,
+                projType: document.getElementById('projType').value,
+                hWidth: document.getElementById('hWidth').value,
+                hLength: document.getElementById('hLength').value,
+                birdPerHouse: document.getElementById('birdPerHouse').value,
+                reqCFM: document.getElementById('lblReqCFM').innerText,
+                estFans: document.getElementById('lblEstFans').innerText,
+                sysFeedType: document.getElementById('sysFeedType').value,
+                sysDrinkType: document.getElementById('sysDrinkType').value,
+                sysFanType: document.getElementById('sysFanType').value,
+                sysMiscDetails: document.getElementById('sysMiscDetails').value
+            };
+
+            try {
+                // ส่งเป็น text/plain ในโหมด no-cors เพื่อเลี่ยงปัญหา CORS
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                showToast("บันทึกข้อมูลเรียบร้อยแล้ว!");
+            } catch (error) {
+                console.error("Save failed:", error);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheet");
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // Set default date to today
+        document.getElementById('evalDate').valueAsDate = new Date();
+
+        function toggleSection(fsId, chkBox) {
+            const fs = document.getElementById(fsId);
+            const label = chkBox.parentElement.querySelector('span');
+            if (chkBox.checked) {
+                fs.disabled = false;
+                fs.classList.remove('opacity-50');
+                label.innerText = "เปิดใช้งาน";
+            } else {
+                fs.disabled = true;
+                fs.classList.add('opacity-50');
+                label.innerText = "ไม่ใช้งาน";
+            }
+        }
+
+        function toggleMixedFan() {
+            const fanType = document.getElementById('sysFanType').value;
+            const container = document.getElementById('mixedFanContainer');
+            if (fanType === 'Mixed AC&EC motor') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function toggleElecSystem() {
+            const val = document.getElementById('elecSystem').value;
+            const otherInput = document.getElementById('elecSystemOther');
+            val === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function toggleFeedType() {
+            const type = document.getElementById('sysFeedType').value;
+            const lbl = document.getElementById('lblFeedDensity');
+            const hint = document.getElementById('lblFeedDensityHint');
+            if (type.includes('Pan')) {
+                lbl.innerText = 'ความหนาแน่น (ตัว/จาน)';
+                hint.innerText = '*มาตรฐาน 35-45 ตัว/จาน';
+            } else {
+                lbl.innerText = 'ระยะการกินของไก่ (ตัว/เมตร)';
+                hint.innerText = '*มาตรฐานสำหรับแบบโซ่';
+            }
+        }
+
+        function toggleFeedHopper() {
+            const val = document.getElementById('sysFeedHopper').value;
+            const otherInput = document.getElementById('sysFeedHopperOther');
+            val === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function toggleDrinkBrand() {
+            const brand = document.getElementById('sysDrinkBrand').value;
+            const otherInput = document.getElementById('sysDrinkBrandOther');
+            brand === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function toggleSiloType() {
+            const type = document.getElementById('sysSiloType').value;
+            const otherInput = document.getElementById('sysSiloTypeOther');
+            type === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+        
+        function toggleSiloSize() {
+            const size = document.getElementById('sysSiloSize').value;
+            const otherInput = document.getElementById('sysSiloSizeOther');
+            size === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+        
+        function toggleFanSize() {
+            const size = document.getElementById('sysFanSize').value;
+            const otherInput = document.getElementById('sysFanSizeOther');
+            size === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function togglePadHeight() {
+            const height = document.getElementById('sysPadHeight').value;
+            const otherInput = document.getElementById('sysPadHeightOther');
+            height === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function togglePadInstall() {
+            const install = document.getElementById('sysPadInstall').value;
+            const otherInput = document.getElementById('sysPadInstallOther');
+            install === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function toggleBrooderType() {
+            const val = document.getElementById('sysBrooderType').value;
+            const otherInput = document.getElementById('sysBrooderTypeOther');
+            val === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function toggleBrooderStyle() {
+            const val = document.getElementById('sysBrooderStyle').value;
+            const otherInput = document.getElementById('sysBrooderStyleOther');
+            val === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function toggleBrooderArea() {
+            const val = document.getElementById('sysBrooderArea').value;
+            const otherInput = document.getElementById('sysBrooderAreaOther');
+            val === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function toggleBrooderFuel() {
+            const val = document.getElementById('sysBrooderFuel').value;
+            const otherInput = document.getElementById('sysBrooderFuelOther');
+            val === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function toggleInletType() {
+            const val = document.getElementById('sysInletType').value;
+            const otherInput = document.getElementById('sysInletTypeOther');
+            val === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function toggleInletPosition() {
+            const val = document.getElementById('sysInletPosition').value;
+            const otherInput = document.getElementById('sysInletPositionOther');
+            val === 'อื่นๆ' ? otherInput.classList.remove('hidden') : otherInput.classList.add('hidden');
+        }
+
+        function calculateLiveStats(source = 'density') {
+            const width = parseFloat(document.getElementById('hWidth').value) || 0;
+            const length = parseFloat(document.getElementById('hLength').value) || 0;
+            const sideH = parseFloat(document.getElementById('hSideHeight').value) || 0;
+            const area = width * length;
+            document.getElementById('lblArea').innerText = area.toLocaleString();
+
+            const densityInput = document.getElementById('density');
+            const birdPerHouseInput = document.getElementById('birdPerHouse');
+            let density = parseFloat(densityInput.value) || 0;
+            let capacity = parseFloat(birdPerHouseInput.value) || 0;
+
+            if (source === 'density') {
+                capacity = area * density;
+                birdPerHouseInput.value = Math.round(capacity);
+            } else if (source === 'bird') {
+                if (area > 0) {
+                    density = capacity / area;
+                    densityInput.value = density.toFixed(1);
+                }
+            }
+            document.getElementById('lblCapacity').innerText = Math.round(capacity).toLocaleString();
+
+            const crossSectionArea = width * sideH; 
+            document.getElementById('lblCrossSection').innerText = crossSectionArea.toFixed(2) + " ตร.ม.";
+
+            const targetVelocityFPM = parseFloat(document.getElementById('sysTargetVelocity').value) || 600;
+            const areaSqFt = crossSectionArea * 10.764;
+            const reqCFM = areaSqFt * targetVelocityFPM;
+            document.getElementById('lblReqCFM').innerText = Math.round(reqCFM).toLocaleString() + " CFM";
+
+            const estFans = Math.ceil(reqCFM / 22000);
+            document.getElementById('lblEstFans').innerText = estFans + " ตัว";
+        }
+
+        async function generatePDF() {
+            const btn = document.querySelector('button[onclick="generatePDF()"]');
+            const originalBtnHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-white"></i> กำลังสร้าง PDF...';
+            btn.disabled = true;
+
+            try {
+                const salesNameInput = document.getElementById('salesName').value;
+                const salesNameDisplay = salesNameInput.trim() !== '' ? salesNameInput : '...................................................';
+                const cName = document.getElementById('custName').value || '-';
+                const fName = document.getElementById('farmName').value || '-';
+                const loc = document.getElementById('location').value || '-';
+                const dEval = document.getElementById('evalDate').value || '-';
+                const w = document.getElementById('hWidth').value;
+                const l = document.getElementById('hLength').value;
+                const hSide = document.getElementById('hSideHeight').value;
+                const colSpacing = document.getElementById('columnSpacing').value;
+                const totalHouses = document.getElementById('totalHouses').value;
+                const projType = document.getElementById('projType').value;
+                let elecSystem = document.getElementById('elecSystem').value;
+                if(elecSystem === 'อื่นๆ') elecSystem = document.getElementById('elecSystemOther').value || 'ไม่ได้ระบุ';
+                const birdPerHouse = document.getElementById('birdPerHouse').value;
+                const reqCfm = document.getElementById('lblReqCFM').innerText;
+                const targetWeightSelect = document.getElementById('targetWeight');
+                const tWeightText = targetWeightSelect.options[targetWeightSelect.selectedIndex].text;
+                const densityVal = document.getElementById('density').value;
+
+                // Build HTML Sections
+                const isFeedOn = document.getElementById('chkSysFeed').checked;
+                let feedHopper = document.getElementById('sysFeedHopper').value;
+                if(feedHopper === 'อื่นๆ') feedHopper = document.getElementById('sysFeedHopperOther').value || 'ไม่ได้ระบุ';
+                const feedHtml = isFeedOn ? `
+                    <ul style="list-style-type: none; margin: 0; padding-left: 0; color: #334155; line-height: 1.4;">
+                        <li>- <b>รูปแบบอุปกรณ์:</b> ${document.getElementById('sysFeedType').value}</li>
+                        <li>- <b>ความจุถังพักอาหาร (Hopper):</b> ${feedHopper}</li>
+                        <li>- <b>จำนวนไลน์:</b> ${document.getElementById('sysFeedLines').value} ไลน์</li>
+                        <li>- <b>ความหนาแน่น:</b> ${document.getElementById('sysFeedDensity').value} ${document.getElementById('sysFeedType').value.includes('Pan') ? 'ตัว/จาน' : 'ตัว/เมตร'}</li>
+                        <li>- <b>ระยะติดตั้งจริง:</b> ${document.getElementById('sysFeedActualLength').value || '-'} เมตร</li>
+                        <li>- <b>ระบบรอก (Winch):</b> ${document.getElementById('sysFeedWinch').value}</li>
+                    </ul>` : '<span style="color:#ef4444; font-style:italic;">- ไม่ต้องการใช้งานระบบนี้ -</span>';
+
+                const isDrinkOn = document.getElementById('chkSysDrink').checked;
+                let drinkBrand = document.getElementById('sysDrinkBrand').value;
+                if(drinkBrand === 'อื่นๆ') drinkBrand = document.getElementById('sysDrinkBrandOther').value || 'ไม่ได้ระบุ';
+                const drinkHtml = isDrinkOn ? `
+                    <ul style="list-style-type: none; margin: 0; padding-left: 0; color: #334155; line-height: 1.4;">
+                        <li>- <b>รูปแบบนิปเปิ้ล:</b> ${document.getElementById('sysDrinkType').value}</li>
+                        <li>- <b>แบรนด์/ระบบน้ำ:</b> ${drinkBrand}</li>
+                        <li>- <b>จำนวนไลน์:</b> ${document.getElementById('sysDrinkLines').value} ไลน์</li>
+                        <li>- <b>ระยะติดตั้งจริง:</b> ${document.getElementById('sysDrinkActualLength').value || '-'} เมตร</li>
+                        <li>- <b>ความหนาแน่น:</b> ${document.getElementById('sysDrinkDensity').value} ตัว/หัว</li>
+                        <li>- <b>ตำแหน่งเมนน้ำเข้า:</b> ${document.getElementById('sysDrinkMainPos').value}</li>
+                        <li>- <b>ประเภทชุดเมนน้ำ:</b> ${document.getElementById('sysDrinkMainType').value}</li>
+                        <li>- <b>ระบบรอก (Winch):</b> ${document.getElementById('sysDrinkWinch').value}</li>
+                    </ul>` : '<span style="color:#ef4444; font-style:italic;">- ไม่ต้องการใช้งานระบบนี้ -</span>';
+
+                const isSiloOn = document.getElementById('chkSysSilo').checked;
+                let siloSize = document.getElementById('sysSiloSize').value;
+                if(siloSize === 'อื่นๆ') siloSize = document.getElementById('sysSiloSizeOther').value || 'ไม่ได้ระบุ';
+                let siloType = document.getElementById('sysSiloType').value;
+                if(siloType === 'อื่นๆ') siloType = document.getElementById('sysSiloTypeOther').value || 'ไม่ได้ระบุ';
+                const siloHtml = isSiloOn ? `
+                    <ul style="list-style-type: none; margin: 0; padding-left: 0; color: #334155; line-height: 1.4;">
+                        <li>- <b>ขนาดไซโล:</b> ${siloSize}</li>
+                        <li>- <b>จำนวนถังไซโล:</b> ${document.getElementById('sysSiloQty').value} ใบ</li>
+                        <li>- <b>ชนิดถังไซโล:</b> ${siloType}</li>
+                        <li>- <b>วันเก็บอาหาร:</b> ${document.getElementById('sysSiloDays').value} วัน</li>
+                        <li>- <b>ตำแหน่งของถังไซโล:</b> ${document.getElementById('sysSiloPos').value}</li>
+                        <li>- <b>ระบบเครื่องชั่งไซโล:</b> ${document.getElementById('sysSiloLoadcell').value}</li>
+                        <li>- <b>ระยะท่อเมนลำเลียงเข้าโรงเรือน:</b> ${document.getElementById('sysMainLine').value || '-'} เมตร</li>
+                    </ul>` : '<span style="color:#ef4444; font-style:italic;">- ไม่ต้องการใช้งานระบบนี้ -</span>';
+
+                const isFanOn = document.getElementById('chkSysFan').checked;
+                let fanSize = document.getElementById('sysFanSize').value;
+                if(fanSize === 'อื่นๆ') fanSize = document.getElementById('sysFanSizeOther').value || 'ไม่ได้ระบุ';
+                const fanType = document.getElementById('sysFanType').value;
+                let fanTypeDisplay = fanType;
+                if (fanType === 'Mixed AC&EC motor') {
+                    const ac = document.getElementById('qtyAC').value || '0';
+                    const ec = document.getElementById('qtyEC').value || '0';
+                    fanTypeDisplay = `Mixed (AC: ${ac} ตัว, EC: ${ec} ตัว)`;
+                }
+                const fanHtml = isFanOn ? `
+                    <ul style="list-style-type: none; margin: 0; padding-left: 0; color: #334155; line-height: 1.4;">
+                        <li>- <b>ความเร็วลมที่ต้องการ:</b> ${document.getElementById('sysTargetVelocity').value} ft/min</li>
+                        <li>- <b>ขนาดพัดลม:</b> ${fanSize}</li>
+                        <li>- <b>ระบบขับเคลื่อน (Motor):</b> ${document.getElementById('sysFanDrive').value}</li>
+                        <li>- <b>ชนิดพัดลม:</b> ${fanTypeDisplay}</li>
+                    </ul>` : '<span style="color:#ef4444; font-style:italic;">- ไม่ต้องการใช้งานระบบนี้ -</span>';
+
+                const isPadOn = document.getElementById('chkSysPad').checked;
+                let padHeight = document.getElementById('sysPadHeight').value;
+                if(padHeight === 'อื่นๆ') padHeight = document.getElementById('sysPadHeightOther').value || 'ไม่ได้ระบุ';
+                let padInstall = document.getElementById('sysPadInstall').value;
+                if(padInstall === 'อื่นๆ') padInstall = document.getElementById('sysPadInstallOther').value || 'ไม่ได้ระบุ';
+                const padHtml = isPadOn ? `
+                    <ul style="list-style-type: none; margin: 0; padding-left: 0; color: #334155; line-height: 1.4;">
+                        <li>- <b>ความสูงเยื่อกระดาษ:</b> ${padHeight}</li>
+                        <li>- <b>ความเร็วหน้าเยื่อกระดาษ:</b> ${document.getElementById('sysPadVelocity').value} ft/min</li>
+                        <li>- <b>ลักษณะเยื่อกระดาษ:</b> ${document.getElementById('sysPadStyle').value}</li>
+                        <li>- <b>ประเภทของเยื่อกระดาษ:</b> ${document.getElementById('sysPadType').value}</li>
+                        <li>- <b>วัสดุราง (Frame):</b> ${document.getElementById('sysPadFrame').value}</li>
+                        <li>- <b>การติดตั้ง:</b> ${padInstall}</li>
+                    </ul>` : '<span style="color:#ef4444; font-style:italic;">- ไม่ต้องการใช้งานระบบนี้ -</span>';
+
+                const isBrooderOn = document.getElementById('chkSysBrooder').checked;
+                let brooderType = document.getElementById('sysBrooderType').value;
+                if(brooderType === 'อื่นๆ') brooderType = document.getElementById('sysBrooderTypeOther').value || 'ไม่ได้ระบุ';
+                let brooderStyle = document.getElementById('sysBrooderStyle').value;
+                if(brooderStyle === 'อื่นๆ') brooderStyle = document.getElementById('sysBrooderStyleOther').value || 'ไม่ได้ระบุ';
+                let brooderArea = document.getElementById('sysBrooderArea').value;
+                if(brooderArea === 'อื่นๆ') brooderArea = document.getElementById('sysBrooderAreaOther').value || 'ไม่ได้ระบุ';
+                let brooderFuel = document.getElementById('sysBrooderFuel').value;
+                if(brooderFuel === 'อื่นๆ') brooderFuel = document.getElementById('sysBrooderFuelOther').value || 'ไม่ได้ระบุ';
+                const brooderHtml = isBrooderOn ? `
+                    <ul style="list-style-type: none; margin: 0; padding-left: 0; color: #334155; line-height: 1.4;">
+                        <li>- <b>รูปแบบเครื่องกก:</b> ${brooderType}</li>
+                        <li>- <b>รูปแบบการกก:</b> ${brooderStyle}</li>
+                        <li>- <b>พื้นที่กกลูกไก่แรกรับ:</b> ${brooderArea}</li>
+                        <li>- <b>ชนิดเชื้อเพลิง:</b> ${brooderFuel}</li>
+                    </ul>` : '<span style="color:#ef4444; font-style:italic;">- ไม่ต้องการใช้งานระบบนี้ -</span>';
+
+                const isInletOn = document.getElementById('chkSysInlet').checked;
+                let inletType = document.getElementById('sysInletType').value;
+                if(inletType === 'อื่นๆ') inletType = document.getElementById('sysInletTypeOther').value || 'ไม่ได้ระบุ';
+                let inletPos = document.getElementById('sysInletPosition').value;
+                if(inletPos === 'อื่นๆ') inletPos = document.getElementById('sysInletPositionOther').value || 'ไม่ได้ระบุ';
+                const inletHtml = isInletOn ? `
+                    <ul style="list-style-type: none; margin: 0; padding-left: 0; color: #334155; line-height: 1.4;">
+                        <li>- <b>รูปแบบช่องลม:</b> ${inletType}</li>
+                        <li>- <b>ตำแหน่งติดตั้ง:</b> ${inletPos}</li>
+                        <li>- <b>ระบบควบคุมการเปิด-ปิด:</b> ${document.getElementById('sysInletControl').value}</li>
+                    </ul>` : '<span style="color:#ef4444; font-style:italic;">- ไม่ต้องการใช้งานระบบนี้ -</span>';
+
+                const isControlOn = document.getElementById('chkSysControl').checked;
+                const cWidth = document.getElementById('sysControlWidth').value || '-';
+                const cLength = document.getElementById('sysControlLength').value || '-';
+                const controlHtml = isControlOn ? `
+                    <ul style="list-style-type: none; margin: 0; padding-left: 0; color: #334155; line-height: 1.4;">
+                        <li>- <b>ขนาด:</b> กว้าง ${cWidth} ม. x ยาว ${cLength} ม.</li>
+                        <li>- <b>ตำแหน่งห้องควบคุม:</b> ${document.getElementById('sysControlPos').value}</li>
+                    </ul>` : '<span style="color:#ef4444; font-style:italic;">- ไม่ต้องการใช้งานระบบนี้ -</span>';
+
+                const isMiscOn = document.getElementById('chkSysMisc').checked;
+                const mDetails = (document.getElementById('sysMiscDetails').value || '-').replace(/\n/g, '<br>');
+                const mSite = (document.getElementById('sysMiscSite').value || '-').replace(/\n/g, '<br>');
+                const miscHtml = isMiscOn ? `
+                    <ul style="list-style-type: none; margin: 0; padding-left: 0; color: #334155; line-height: 1.4;">
+                        <li>- <b>รายละเอียดเพิ่มเติม:</b><br><span style="color:#475569; padding-left: 12px; display: inline-block; margin-top: 2px;">${mDetails}</span></li>
+                        <li style="margin-top: 6px;">- <b>อุปสรรคหน้างาน:</b><br><span style="color:#475569; padding-left: 12px; display: inline-block; margin-top: 2px;">${mSite}</span></li>
+                    </ul>` : '<span style="color:#ef4444; font-style:italic;">- ไม่ต้องการใช้งานระบบนี้ -</span>';
+
+                const printContainer = document.getElementById('print-view');
+                printContainer.style.display = 'block'; 
+                
+                const headerTpl = (page) => `
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 15px;">
+                        <div>
+                            <img src="โลโก้_KSP.png" onerror="this.onerror=null; this.src='https://placehold.co/200x100?text=KSP+LOGO';" style="height: 50px; width: auto;">
+                        </div>
+                        <div style="text-align: right;">
+                            <h1 style="font-size: 16px; font-weight: bold; color: #0f172a; margin: 0;">ข้อมูลความต้องการอุปกรณ์โรงเรือนไก่เนื้อแบบปิด (Broiler Requirement Form)</h1>
+                            <p style="font-size: 10px; color: #64748b; margin: 3px 0 0 0;">หน้าที่ ${page}/2</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 11px;">
+                        <div>
+                            <p style="margin: 0;"><strong>ชื่อลูกค้า:</strong> ${cName} | <strong>ฟาร์ม:</strong> ${fName}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="margin: 0;"><strong>สถานที่:</strong> ${loc} | <strong>วันที่:</strong> ${dEval}</p>
+                        </div>
+                    </div>
+                `;
+
+                const houseInfoHtml = `
+                    <div style="background-color: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 15px;">
+                        <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+                            <tr><td><strong>ลักษณะโครงการ:</strong> ${projType}</td><td><strong>ระบบไฟฟ้า:</strong> ${elecSystem}</td></tr>
+                            <tr><td><strong>ขนาด (ก x ย):</strong> ${w} x ${l} เมตร</td><td><strong>สูงเสาข้าง:</strong> ${hSide} ม. (ห่าง ${colSpacing} ม.)</td></tr>
+                            <tr><td><strong>จำนวน:</strong> ${totalHouses} หลัง</td><td><strong>ไก่/หลัง:</strong> ${Number(birdPerHouse).toLocaleString()} ตัว</td></tr>
+                            <tr><td><strong>น.น.เป้าหมาย:</strong> ${tWeightText}</td><td><strong>หนาแน่น:</strong> ${densityVal} ตัว/ตร.ม.</td></tr>
+                            <tr><td colspan="2" style="color: #0369a1; padding-top: 5px;"><strong>ปริมาณลมเป้าหมาย:</strong> ${reqCfm}</td></tr>
+                        </table>
+                    </div>`;
+
+                const signatureHtml = `
+                    <div style="margin-top: 40px; display: flex; justify-content: flex-end; font-size: 11px;">
+                        <div style="width: 300px; text-align: center;">
+                            <p style="margin-bottom: 30px;">ข้าพเจ้าขอยืนยันว่าข้อมูลข้างต้นถูกต้องและครบถ้วน</p>
+                            <div style="border-bottom: 1px dashed #0f172a; margin-bottom: 5px;"></div>
+                            <div>( ${salesNameDisplay} )</div>
+                            <div style="margin-top: 10px;">ตำแหน่ง ฝ่ายขาย</div>
+                            <div>วันที่ ${dEval !== '-' ? dEval : '......../......../........'}</div>
+                        </div>
+                    </div>`;
+
+                printContainer.innerHTML = `
+                    <div id="pdf-page-1" class="pdf-page">
+                        ${headerTpl(1)}
+                        ${houseInfoHtml}
+                        <h2 style="font-size: 12px; font-weight: bold; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;">รายการระบบอุปกรณ์ (หน้า 1)</h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 5px; width: 40%; font-weight: bold; vertical-align: top;">1. ระบบให้อาหาร</td><td>${feedHtml}</td></tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 5px; font-weight: bold; vertical-align: top;">2. ระบบให้น้ำ</td><td>${drinkHtml}</td></tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 5px; font-weight: bold; vertical-align: top;">3. ระบบไซโล</td><td>${siloHtml}</td></tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 5px; font-weight: bold; vertical-align: top;">4. ระบบพัดลม</td><td>${fanHtml}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="pdf-page-2" class="pdf-page">
+                        ${headerTpl(2)}
+                        <h2 style="font-size: 12px; font-weight: bold; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;">รายการระบบอุปกรณ์ (หน้า 2)</h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 5px; width: 40%; font-weight: bold; vertical-align: top;">5. ระบบทำความเย็น</td><td>${padHtml}</td></tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 5px; font-weight: bold; vertical-align: top;">6. ระบบกกไก่</td><td>${brooderHtml}</td></tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 5px; font-weight: bold; vertical-align: top;">7. ระบบช่องลมเข้า</td><td>${inletHtml}</td></tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 5px; font-weight: bold; vertical-align: top;">8. ห้องควบคุม</td><td>${controlHtml}</td></tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 5px; font-weight: bold; vertical-align: top;">9. เพิ่มเติม</td><td>${miscHtml}</td></tr>
+                            </tbody>
+                        </table>
+                        ${signatureHtml}
+                    </div>`;
+
+                const canvas1 = await html2canvas(document.getElementById('pdf-page-1'), { scale: 2, useCORS: true });
+                const canvas2 = await html2canvas(document.getElementById('pdf-page-2'), { scale: 2, useCORS: true });
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                
+                pdf.addImage(canvas1.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, (canvas1.height * pdfWidth) / canvas1.width);
+                pdf.addPage();
+                pdf.addImage(canvas2.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, (canvas2.height * pdfWidth) / canvas2.width);
+                
+                pdf.save(`Requirement_Farm${fName !== '-' ? `_${fName}` : ''}.pdf`);
+
+            } catch (error) {
+                console.error("PDF Generation failed:", error);
+                alert("เกิดข้อผิดพลาดในการสร้าง PDF");
+            } finally {
+                btn.innerHTML = originalBtnHtml;
+                btn.disabled = false;
+                document.getElementById('print-view').style.display = 'none';
+            }
+        }
+
+        window.onload = () => {
+            calculateLiveStats('density');
+            toggleElecSystem();
+            toggleMixedFan();
+            toggleFeedType();
+            toggleFeedHopper();
+            toggleDrinkBrand();
+            toggleSiloType();
+            toggleSiloSize();
+            toggleFanSize();
+            togglePadHeight();
+            togglePadInstall();
+            toggleBrooderType();
+            toggleBrooderStyle();
+            toggleBrooderArea();
+            toggleBrooderFuel();
+            toggleInletType();
+            toggleInletPosition();
+        };
+    </script>
+</body>
+</html>
